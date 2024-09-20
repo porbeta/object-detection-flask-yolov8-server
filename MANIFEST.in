@@ -1,0 +1,4 @@
+include requirements.txt
+include app.py
+
+recursive-exclude src/test

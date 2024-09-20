@@ -1,0 +1,29 @@
+[project]
+name = "object-detection-flask-yolov8-sever"
+version = "1.0.0"
+description = "This is a simplified example of object detection running on a Flask app."
+dependencies = [
+    "flask",
+    "flask-socketio",
+    "gunicorn",
+    "python-socketio",
+    "supervision",
+    "ultralytics"
+]
+
+[project.optional-dependencies]
+test = [
+  "pytest"
+]
+
+[build-system]
+requires = ["setuptools", "wheel", "build"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+minversion = "8.3.2"
+pythonpath = [ "." ]
+python_files = [ "src/test/*_test.py", "src/test/**/*_test.py" ]

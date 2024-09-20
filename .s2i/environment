@@ -1,0 +1,2 @@
+PORT=8081
+GUNICORN_CMD_ARGS="--bind=0.0.0.0:8081 --access-logfile=- -w=1 --threads=100"

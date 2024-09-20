@@ -1,0 +1,38 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: python-image
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: object-detection-sever
+  template:
+    metadata:
+      labels:
+        app: object-detection-sever
+    spec:
+      containers:
+        - name: python-image
+          image: object-detection-sever:latest
+          ports:
+            - name: http
+              containerPort: 8081
+              protocol: TCP
+          resources:
+            requests:
+              memory: "50Mi"
+              cpu: "10m"
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: python-image
+spec:
+  ports:
+    - name: http-8081
+      port: 8081
+      protocol: TCP
+      targetPort: 8081
+  selector:
+    app: object-detection-sever
