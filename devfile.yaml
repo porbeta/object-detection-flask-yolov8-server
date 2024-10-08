@@ -2,7 +2,7 @@ schemaVersion: 2.2.0
 components:
   - name: image-build
     image:
-      imageName: object-detection-sever:latest
+      imageName: object-detection-server:latest
       dockerfile:
         uri: docker/Dockerfile
         buildContext: .

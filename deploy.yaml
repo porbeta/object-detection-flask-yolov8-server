@@ -6,15 +6,15 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: object-detection-sever
+      app: object-detection-server
   template:
     metadata:
       labels:
-        app: object-detection-sever
+        app: object-detection-server
     spec:
       containers:
         - name: python-image
-          image: object-detection-sever:latest
+          image: object-detection-server:latest
           ports:
             - name: http
               containerPort: 8081
@@ -35,4 +35,4 @@ spec:
       protocol: TCP
       targetPort: 8081
   selector:
-    app: object-detection-sever
+    app: object-detection-server

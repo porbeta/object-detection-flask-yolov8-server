@@ -42,8 +42,8 @@ podman build -t object-detection-server:latest -f ./docker/Dockerfile .
 <p>You can also create a new image using s2i-light using the following command:</p>
 
 ```
-podman build -t object-detection-sever-base:latest -f ./docker/Dockerfile.s2i .
-s2i build . object-detection-sever-base:latest object-detection-sever
+podman build -t object-detection-server-base:latest -f ./docker/Dockerfile.s2i .
+s2i build . object-detection-server-base:latest object-detection-server
 ```
 
 <p>To create a container, run:</p>
