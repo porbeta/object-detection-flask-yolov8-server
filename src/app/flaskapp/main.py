@@ -1,19 +1,21 @@
-from flask import Flask
-from flask import render_template 
+from flask import Flask, render_template 
 from flask_socketio import SocketIO, emit
 from pathlib import Path
 from ultralytics import YOLO
 import supervision as sv
-import os.path as path
+import os
 import numpy as np
 import base64
 import io
 import PIL.Image as Image
+import socketio as sio
+
+socket_to_observer = sio.Client()
 
 model_path = Path(__file__).parents[3]
 
 app = Flask(__name__)
-model = YOLO(path.join(model_path, "yolov8n.pt"))
+model = YOLO(os.path.join(model_path, "yolov8n.pt"))
 
 box_annotator = sv.BoxAnnotator(
     thickness=1,
@@ -23,6 +25,22 @@ box_annotator = sv.BoxAnnotator(
 
 MAX_BUFFER_SIZE = 50 * 1000 * 1000
 socketio = SocketIO(app, max_http_buffer_size=MAX_BUFFER_SIZE, cors_allowed_origins="*")
+
+connected = False
+observer_endpoint = os.environ.get('OBSERVER_ENDPOINT')
+
+if observer_endpoint:
+    print("OBSERVER SET TO: ", observer_endpoint)
+
+    try:
+        socket_to_observer.connect(observer_endpoint, namespaces=['/observer'])
+    except sio.exceptions.ConnectionError as err:
+        print("ConnectionError: ", err)
+    else:
+        print("Connected!")
+        connected = True
+else:
+    print("OBSERVER NOT SET: Continuing with default mode")
 
 def process_frame(frame, model, box_annotator):
     result = model(frame, agnostic_nms=True)[0]
@@ -65,3 +83,7 @@ def handle_receive_image(images_bytes):
     data_url = 'data:image/jpeg;base64,' + base64string
 
     emit('stream-image', data_url)
+
+    if connected:
+        print("IMAGE SENT TO OBSERVER")
+        socket_to_observer.emit('observer-image', data_url, namespace="/observer")
