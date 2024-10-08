@@ -52,6 +52,12 @@ s2i build . object-detection-server-base:latest object-detection-server
 podman run -p 8081:8081 object-detection-server
 ```
 
+<p>To run in conjunction with the <a href="https://github.com/porbeta/object-detection-socketio-observer">object-detection-socketio-observer</a> example, add an environment variable for <code>OBSERVER_ENDPOINT</code>:</p>
+
+```
+podman run -e OBSERVER_ENDPOINT=http://localhost:8080 -p 8081:8081 object-detection-server
+```
+
 ## Building and packaging
 
 <p>To generate a distribution package of the application, run:<p>
