@@ -1,5 +1,5 @@
 [project]
-name = "object-detection-flask-yolov8-sever"
+name = "object-detection-flask-yolov8-server"
 version = "1.0.0"
 description = "This is a simplified example of object detection running on a Flask app."
 dependencies = [
