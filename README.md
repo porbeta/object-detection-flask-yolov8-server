@@ -36,6 +36,7 @@ gunicorn "wsgi" --bind=0.0.0.0:8080 --access-logfile=- --config ""
 <p>From the top directory, run the following to create an image:</p>
 
 ```
+chmod -R a+rwx src/object_detection_flask_yolov8_server.egg-info
 podman build -t object-detection-server:latest -f ./docker/Dockerfile .
 ```
 
