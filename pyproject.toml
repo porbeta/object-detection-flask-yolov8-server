@@ -6,7 +6,7 @@ dependencies = [
     "flask",
     "flask-socketio",
     "gunicorn",
-    "python-socketio[client]",
+    "redis",
     "supervision",
     "ultralytics"
 ]

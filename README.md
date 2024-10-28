@@ -53,11 +53,15 @@ s2i build . object-detection-server-base:latest object-detection-server
 podman run -p 8081:8081 object-detection-server
 ```
 
-<p>To run in conjunction with the <a href="https://github.com/porbeta/object-detection-socketio-observer">object-detection-socketio-observer</a> example, add an environment variable for <code>OBSERVER_ENDPOINT</code>:</p>
+<p>You should now be able to view your own recording with object detection at <a href="http://localhost:8081/recorder">http://localhost:8081/recorder</a></p>
+
+<p>To test the observer view as a third party client, run a redis-stack container prior to running the container above:</p>
 
 ```
-podman run -e OBSERVER_ENDPOINT=http://localhost:8080 -p 8081:8081 object-detection-server
+podman run -p 6379:6379 -it redis/redis-stack:latest
 ```
+
+<p>You can new view the observer at <a href="http://localhost:8081">http://localhost:8081</a></p>
 
 ## Building and packaging
 

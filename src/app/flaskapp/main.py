@@ -1,21 +1,28 @@
-from flask import Flask, render_template 
+from flask import Flask, render_template, request 
 from flask_socketio import SocketIO, emit
 from pathlib import Path
 from ultralytics import YOLO
 import supervision as sv
-import os
+import os.path as path
 import numpy as np
 import base64
 import io
 import PIL.Image as Image
-import socketio as sio
+import redis
 
-socket_to_observer = sio.Client()
+redis_client = None
+try:
+    redis_client = redis.Redis(host='localhost', port=6379, db=0)
+    redis_client.ping()
+    print("Connected to Redis")
+except redis.exceptions.ConnectionError as e:
+    print("Connection attempt failed")
+    redis_client = None
 
 model_path = Path(__file__).parents[3]
 
 app = Flask(__name__)
-model = YOLO(os.path.join(model_path, "yolov8n.pt"))
+model = YOLO(path.join(model_path, "yolov8n.pt"))
 
 box_annotator = sv.BoxAnnotator(
     thickness=1,
@@ -25,22 +32,6 @@ box_annotator = sv.BoxAnnotator(
 
 MAX_BUFFER_SIZE = 50 * 1000 * 1000
 socketio = SocketIO(app, max_http_buffer_size=MAX_BUFFER_SIZE, cors_allowed_origins="*")
-
-connected = False
-observer_endpoint = os.environ.get('OBSERVER_ENDPOINT')
-
-if observer_endpoint:
-    print("OBSERVER SET TO: ", observer_endpoint)
-
-    try:
-        socket_to_observer.connect(observer_endpoint, namespaces=['/observer'])
-    except sio.exceptions.ConnectionError as err:
-        print("ConnectionError: ", err)
-    else:
-        print("Connected!")
-        connected = True
-else:
-    print("OBSERVER NOT SET: Continuing with default mode")
 
 def process_frame(frame, model, box_annotator):
     result = model(frame, agnostic_nms=True)[0]
@@ -57,16 +48,49 @@ def process_frame(frame, model, box_annotator):
     )
     return annotated_frame
 
+
 @app.route('/ping')
 def hello():
     return "{\"status\": \"SUCCESS\"}"
 
+@app.route('/recorder')
+def show_recorder():
+    return render_template('recorder.html')
+
 @app.route('/')
-def show_client():
-    return render_template('client.html') 
+def show_observer():
+    return render_template('observer.html')
+
+@socketio.on('connect', namespace='/image-processing')
+def handle_connect():
+    sid = request.sid
+    if redis_client is not None:        
+        active_client = redis_client.get('active_client')
+
+        if active_client is None:
+            redis_client.set('active_client', sid)
+            print("active_client set to " + sid)
+
+    print('Client connected with SID:', sid)
+
+@socketio.on('disconnect', namespace='/image-processing')
+def handle_disconnect():
+    if redis_client is not None:        
+        active_client = redis_client.get('active_client')
+
+        if active_client is not None:
+            redis_client.delete('active_client')
+            print("active_client deleted")
+
+    print('Client disconnected')
 
 @socketio.on('receive-image', namespace='/image-processing')
 def handle_receive_image(images_bytes):
+    sid = request.sid
+    active_client = None
+
+    print("socket id: " + sid)
+
     b = bytearray()
     b.extend(map(ord, images_bytes))
 
@@ -84,6 +108,16 @@ def handle_receive_image(images_bytes):
 
     emit('stream-image', data_url)
 
-    if connected:
-        print("IMAGE SENT TO OBSERVER")
-        socket_to_observer.emit('observer-image', data_url, namespace="/observer")
+    if redis_client is not None:        
+        active_client = redis_client.get('active_client')
+
+        if active_client is not None:
+            active_client_str = active_client.decode("utf-8")
+            print("active_client: " + active_client_str)
+
+            if active_client_str == sid:
+                emit('broadcasted-image', data_url, broadcast=True)
+                print('sent to observer')
+        else:
+            redis_client.set('active_client', sid)
+            print("active_client set to " + sid)
