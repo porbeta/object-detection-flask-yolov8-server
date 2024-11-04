@@ -53,15 +53,21 @@ s2i build . object-detection-server-base:latest object-detection-server
 podman run -p 8081:8081 object-detection-server
 ```
 
-<p>You should now be able to view your own recording with object detection at <a href="http://localhost:8081/recorder">http://localhost:8081/recorder</a></p>
+<p>You should now be able to view your own recording with object detection at <a href="http://localhost:8081/recorder">http://localhost:8081/recorder</a>.</p>
 
-<p>To test the observer view as a third party client, run a redis-stack container prior to running the container above:</p>
+<p>To test the observer view as a third party client, run a redis-stack container prior to running the container above, exposing only the server ports:</p>
 
 ```
-podman run -p 6379:6379 -it redis/redis-stack:latest
+podman run -p 8081:8081 redis/redis-stack:latest
 ```
 
-<p>You can new view the observer at <a href="http://localhost:8081">http://localhost:8081</a></p>
+<p>Subsequently, run the server using the same network as the redis-stack container (i.e., by specifying the name or id of the redis-stack container for the network flag):</p>
+
+```
+podman run --network container:<name|id> object-detection-server
+```
+
+<p>After running both containers, you can observe any traffic transmitted through the <b>/recorder</b> endpoint above as a third-party at <a href="http://localhost:8081">http://localhost:8081</a>.</p>
 
 ## Building and packaging
 
@@ -83,3 +89,5 @@ pip3 install -e '.[test]'
 ```
 pytest
 ```
+
+<p><u><b>Note:</b> at present, testing is limited in scope.  This will be expanded in future commits.</u></p>
